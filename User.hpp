@@ -4,10 +4,13 @@
 
 #ifndef USER_HPP
 #define USER_HPP
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "Property.hpp"
+
+using SharedProperty = std::shared_ptr<Property>;
 
 class User {
 protected:
@@ -15,7 +18,7 @@ protected:
     std::string name;
     std::string email;
     std::string password;
-    std::vector<Property> vecOfProperties;
+    std::vector<SharedProperty> vecOfProperties;
 
 public:
     [[nodiscard]] std::string getId() const;
@@ -26,16 +29,15 @@ public:
 
     [[nodiscard]] std::string getPassword() const;
 
-    [[nodiscard]] std::vector<Property> getProperties() const;
+    [[nodiscard]] std::vector<SharedProperty> getProperties() const;
 
-    Property getProperty(const std::string &idP);
+    std::shared_ptr<Property> getProperty(const std::string &idP);
 
-    void add(const Property &property);
+    void add(const SharedProperty &property);
 
     void remove(const std::string &idP);
 
     User(const std::string &name, const std::string &password, const std::string &email);
-
 };
 
 

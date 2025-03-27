@@ -27,8 +27,8 @@ RentedProperty Property::getRentedProperty() { return this->rentedProperty; }
 
 
 void Property::status() const {
-    std::cout << "Stars: " << this->stars.getStars() << std::endl;
-    std::cout << "Number of avaliations: " << this->stars.amountOfAvaliations() << std::endl;
+    std::cout << "Stars: " << static_cast<int>(this->stars.getStars()) << std::endl;
+    std::cout << "Number of avaliations: " << static_cast<int>(this->stars.amountOfAvaliations()) << std::endl;
     std::cout << "Address: " << this->address << std::endl;
     std::cout << "Owner Name: " << this->ownerName << std::endl;
     std::cout << "Location Type: " << this->locationType << std::endl;

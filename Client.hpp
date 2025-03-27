@@ -9,6 +9,7 @@
 
 #include "User.hpp"
 
+
 class Client : public User {
 public:
     void rate(const std::string &id, uint8_t rate) const;
@@ -16,5 +17,6 @@ public:
     Client(const std::string &name, const std::string &password, const std::string &email);
 };
 
+using SharedClient = std::shared_ptr<Client>;
 
 #endif  // CLIENT_HPP

@@ -5,9 +5,9 @@
 #include "Client.hpp"
 
 void Client::rate(const std::string &id, const uint8_t rate) const {
-    for (auto property: this->vecOfProperties) {
-        if (property.getId() == id) {
-            property.getStars().addStars(id, rate);
+    for (const auto &property: this->vecOfProperties) {
+        if (property->getId() == id) {
+            property->getStars().addStars(id, rate);
         }
     }
 }

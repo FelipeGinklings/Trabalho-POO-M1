@@ -6,15 +6,6 @@
 
 #include <cstdlib>
 #include <iostream>
-// Definitions of static member variables
-bool System::isLogged = false;  // initialization; adjust according to your needs
-std::vector<Client> System::vecOfClients;
-std::vector<Host> System::vecOfHosts;
-std::vector<Property> System::listOfProperties;
-bool System::clientType = false;  // Default initialization
-std::string System::loggedUserId;
-Address System::addressFilter = Address("", "", "");
-uint16_t System::priceFilter = 0;
 // Internal class functions
 
 /**
@@ -29,9 +20,9 @@ uint16_t System::priceFilter = 0;
  */
 UserExist System::getUser() {
     auto tempUser = UserExist();
-    if (clientType) {
-        for (auto& client: vecOfClients) {
-            if (client.getId() == loggedUserId) {
+    if (this->clientType) {
+        for (const auto& client: this->vecOfClients) {
+            if (client->getId() == this->loggedUserId) {
                 tempUser.setItExist(true);
                 tempUser.setClient(client);
                 break;
@@ -39,8 +30,8 @@ UserExist System::getUser() {
         }
         return tempUser;
     }
-    for (auto& host: vecOfHosts) {
-        if (host.getId() == loggedUserId) {
+    for (const auto& host: this->vecOfHosts) {
+        if (host->getId() == this->loggedUserId) {
             tempUser.setItExist(true);
             tempUser.setHost(host);
             break;
@@ -62,21 +53,19 @@ UserExist System::getUser() {
  */
 UserExist System::getUser(const std::string& email, const std::string& password) {
     auto tempUser = UserExist();
-    if (clientType) {
-        for (auto& client: vecOfClients) {
-            if (client.getEmail() == email && client.getPassword() == password) {
+    for (const auto& client: this->vecOfClients) {
+        if (client->getEmail() == email && client->getPassword() == password) {
+            tempUser.setItExist(true);
+            tempUser.setClient(client);
+        }
+    }
+    if (!tempUser.getItExist()) {
+        for (const auto& host: this->vecOfHosts) {
+            if (host->getEmail() == email && host->getPassword() == password) {
                 tempUser.setItExist(true);
-                tempUser.setClient(client);
+                tempUser.setHost(host);
                 break;
             }
-        }
-        return tempUser;
-    }
-    for (auto& host: vecOfHosts) {
-        if (host.getEmail() == email && host.getPassword() == password) {
-            tempUser.setItExist(true);
-            tempUser.setHost(host);
-            break;
         }
     }
     return tempUser;
@@ -86,26 +75,24 @@ UserExist System::getUser(const std::string& email, const std::string& password)
  * @brief Populates the listOfProperties vector with Property objects from all hosts.
  *
  * This method iterates through the vector of Host objects (vecOfHosts), retrieves
- * their associated properties using the Host::getProperties method, and appends them
- * to the global static vector listOfProperties.
+ * their associated properties using the Host:->getProperties method, and appends them
+ * to the global static vector this->listOfProperties.
  *
  * @note This method assumes that vecOfHosts contains valid Host objects, each having
  * a non-empty vector of properties when applicable. It clears no existing elements in
  * listOfProperties prior to insertion.
  */
 void System::createPropertiesList() {
-    for (const auto& host: vecOfHosts) {
-        std::vector<Property> localProperties = host.getProperties();
-        listOfProperties.insert(listOfProperties.end(), localProperties.begin(), localProperties.end());
+    for (const auto& host: this->vecOfHosts) {
+        std::vector<SharedProperty> localProperties = host->getProperties();
+        this->listOfProperties.insert(this->listOfProperties.end(), localProperties.begin(), localProperties.end());
     }
 }
-Address System::getAddressFilter() { return addressFilter; }
+bool System::hasFilters() const { return addressFilter != Address("", "", "") || priceFilter != 0; }
 
-uint16_t System::getPriceFilter() { return priceFilter; }
+bool System::getClientType() const { return this->clientType; }
 
-bool System::getClientType() { return clientType; }
-
-bool System::getIsLogged() { return isLogged; }
+bool System::getIsLogged() const { return this->isLogged; }
 
 /**
  * Filters and retrieves a list of properties based on specified criteria, including
@@ -117,29 +104,32 @@ bool System::getIsLogged() { return isLogged; }
  *         properties that are not rented and fall within the specified location and
  *         price range.
  */
-std::vector<Property> System::showProperties() {
+std::vector<SharedProperty> System::showProperties() {
     int i = 1;
-    std::vector<Property> properties;
-    for (auto allProperty: listOfProperties) {
+    std::vector<SharedProperty> properties;
+    bool noPriceFilter = false;
+    bool noLocationFilter = false;
+    if (this->priceFilter == 0) noPriceFilter = true;
+    if (this->addressFilter == Address("", "", "")) noLocationFilter = true;
+    for (auto& allProperty: this->listOfProperties) {
         // locations filters
-        const bool sameCountry = addressFilter.getCountry() == allProperty.getAddress().getCountry();
-        const bool sameState = addressFilter.getState() == allProperty.getAddress().getState();
-        const bool sameCity = addressFilter.getCity() == allProperty.getAddress().getCity();
-        auto print = [&allProperty, &properties, &i] {
+        const bool sameCountry = this->addressFilter.getCountry() == allProperty->getAddress().getCountry();
+        const bool sameState = this->addressFilter.getState() == allProperty->getAddress().getState();
+        const bool sameCity = this->addressFilter.getCity() == allProperty->getAddress().getCity();
+
+        const bool isNotRented = !allProperty->getIsRented();
+
+        bool withPriceFilter = this->priceFilter >= allProperty->getPrice();
+        bool withLocationsFilters = sameCountry || sameState || sameCity;
+        if (noPriceFilter) withPriceFilter = true;
+        if (noLocationFilter) withLocationsFilters = true;
+
+        if (isNotRented && (withPriceFilter && withLocationsFilters)) {
             std::cout << " ~~ Propriedade numero " << i << " ~~ " << std::endl;
-            allProperty.status();
+            allProperty->status();
             properties.push_back(allProperty);
             std::cout << std::endl;
             i++;
-        };
-        if (!allProperty.getIsRented() && addressFilter == Address("", "", "") &&
-            priceFilter == 0) {  // Search without filters/
-            print();
-        } else if (!allProperty.getIsRented() && allProperty.getPrice() <= priceFilter &&
-                   (sameCountry || sameState || sameCity)) {  // Search with location filers
-            print();
-        } else if (!allProperty.getIsRented() && allProperty.getPrice() <= priceFilter) {
-            print();
         }
     }
     return properties;
@@ -161,24 +151,24 @@ std::vector<Property> System::showProperties() {
  * @param rented An optional string parameter, which is currently not used in the logic of the function.
  * @return A vector of `Property` objects representing the user's relevant properties.
  */
-std::vector<Property> System::showProperties([[maybe_unused]] const std::string& rented = "rented") {
+std::vector<SharedProperty> System::showProperties([[maybe_unused]] const std::string& rented = "rented") {
     int i = 1;
-    std::vector<Property> properties;
-    if (clientType) {
-        for (auto clientProperty: getUser().getClient().getProperties()) {
+    std::vector<SharedProperty> properties;
+    if (this->clientType) {
+        for (auto& clientProperty: getUser().getClient()->getProperties()) {
             std::cout << " ~~ Propriedade numero " << i << " ~~ " << std::endl;
-            std::cout << "Address: " << clientProperty.getAddress() << std::endl;
-            clientProperty.getRentedProperty().clientStatus();
+            std::cout << "Address: " << clientProperty->getAddress() << std::endl;
+            clientProperty->getRentedProperty().clientStatus();
             properties.push_back(clientProperty);
             std::cout << std::endl;
             i++;
         }
         return properties;
     }
-    for (auto hostProperty: getUser().getHost().getProperties()) {
-        if (hostProperty.getIsRented()) {
+    for (auto& hostProperty: getUser().getHost()->getProperties()) {
+        if (hostProperty->getIsRented()) {
             std::cout << " ~~ Propriedade numero " << i << " ~~ " << std::endl;
-            hostProperty.getRentedProperty().clientStatus();
+            hostProperty->getRentedProperty().clientStatus();
             properties.push_back(hostProperty);
             std::cout << std::endl;
             i++;
@@ -202,15 +192,17 @@ std::vector<Property> System::showProperties([[maybe_unused]] const std::string&
  * @return A `std::vector` of `Property` objects representing the properties
  *         associated with the currently logged-in host.
  */
-std::vector<Property> System::showProperties([[maybe_unused]] bool hostProperties) {
+std::vector<SharedProperty> System::showProperties([[maybe_unused]] bool hostProperties) {
     int i = 1;
-    std::vector<Property> properties;
-    for (auto hostProperty: getUser().getHost().getProperties()) {
-        std::cout << " ~~ Propriedade numero " << i << " ~~ " << std::endl;
-        hostProperty.status();
-        properties.push_back(hostProperty);
-        std::cout << std::endl;
-        i++;
+    std::vector<SharedProperty> properties;
+    for (const auto& hostProperty: getUser().getHost()->getProperties()) {
+        if (!hostProperty->getIsRented()) {
+            std::cout << " ~~ Propriedade numero " << i << " ~~ " << std::endl;
+            hostProperty->status();
+            properties.push_back(hostProperty);
+            std::cout << std::endl;
+            i++;
+        }
     }
     return properties;
 }
@@ -231,26 +223,24 @@ bool System::signin() {
     std::cin >> email;
     std::cout << "Password: ";
     std::cin >> password;
-    UserExist user = getUser(email, password);
+    const UserExist user = getUser(email, password);
 
-    const bool isClient = user.getClient().getEmail() == email && user.getClient().getPassword() == password;
-    const bool isHost = user.getHost().getEmail() == email && user.getHost().getPassword() == password;
-
-    if (user.getItExist() && isClient) {
-        clientType = true;
-        loggedUserId = user.getClient().getId();
-    } else if (user.getItExist() && isHost) {
-        clientType = false;
-        loggedUserId = user.getHost().getId();
-    } else {
+    if (!user.getItExist()) {
         std::cout << "Usuario nao encontrado!" << std::endl;
         return false;
     }
 
-    isLogged = true;
+    if (user.getClient()->getEmail() == email && user.getClient()->getPassword() == password) {
+        this->clientType = true;
+        this->loggedUserId = user.getClient()->getId();
+    } else {
+        this->clientType = false;
+        this->loggedUserId = user.getHost()->getId();
+    }
+
+    this->isLogged = true;
     std::cout << "Logado com sucesso" << std::endl;
-    system("pause");
-    system("cls");
+
     return true;
 }
 
@@ -282,20 +272,22 @@ void System::signup() {
     std::cin >> type;
 
     if (type == 0) {
-        const Host newHost(name, password, email);
-        vecOfHosts.push_back(newHost);
-        loggedUserId = newHost.getId();
+        auto newHost = std::make_shared<Host>(name, password, email);
+        this->vecOfHosts.push_back(newHost);
+        this->loggedUserId = newHost->getId();
+        newHost.reset();
+        this->clientType = false;
     } else {
-        const Client newClient(name, password, email);
-        vecOfClients.push_back(newClient);
-        loggedUserId = newClient.getId();
+        auto newClient = std::make_shared<Client>(name, password, email);
+        this->vecOfClients.push_back(newClient);
+        this->loggedUserId = newClient->getId();
+        newClient.reset();
+        this->clientType = true;
     }
 
 
-    isLogged = true;
+    this->isLogged = true;
     std::cout << "Usuario cadastrado e logado com sucesso!" << std::endl;
-    system("pause");
-    system("cls");
 }
 
 /**
@@ -313,13 +305,11 @@ void System::signup() {
  */
 void System::logout() {
     std::cout << " ~~ Logout ~~" << std::endl;
-    isLogged = false;
-    loggedUserId = "";
-    addressFilter = Address("", "", "");
-    priceFilter = 0;
-    std::cout << "Deslogado com sucesso!" << std::endl;
-    system("pause");
-    system("cls");
+    this->isLogged = false;
+    this->loggedUserId = "";
+    this->addressFilter = Address("", "", "");
+    this->priceFilter = 0;
+    std::cout << "Deslogado com sucesso!" << std::endl << std::endl;
 }
 
 /**
@@ -335,22 +325,22 @@ void System::logout() {
 void System::searchFilter(const std::string& filterChoice) {
     if (filterChoice == "f1") {
         std::cout << "Digite o valor maximo para filtrar: ";
-        std::cin >> priceFilter;
+        std::cin >> this->priceFilter;
     } else if (filterChoice == "f2") {
         std::string country;
         std::cout << "Digite o nome do Pais para filtrar: ";
         std::cin >> country;
-        addressFilter.setCountry(country);
+        this->addressFilter.setCountry(country);
     } else if (filterChoice == "f3") {
         std::string state;
         std::cout << "Digite o nome do Estado para filtrar: ";
         std::cin >> state;
-        addressFilter.setState(state);
+        this->addressFilter.setState(state);
     } else if (filterChoice == "f4") {
         std::string city;
         std::cout << "Digite o nome da Cidade para filtrar: ";
         std::cin >> city;
-        addressFilter.setCity(city);
+        this->addressFilter.setCity(city);
     }
 }
 
@@ -362,10 +352,10 @@ void System::searchFilter(const std::string& filterChoice) {
  * the `priceFilter` to zero, indicating there is no specific price filter applied.
  */
 void System::searchFilter() {
-    addressFilter.setCountry("");
-    addressFilter.setState("");
-    addressFilter.setCity("");
-    priceFilter = 0;
+    this->addressFilter.setCountry("");
+    this->addressFilter.setState("");
+    this->addressFilter.setCity("");
+    this->priceFilter = 0;
 }
 
 /**
@@ -376,10 +366,10 @@ void System::searchFilter() {
  * @param property The `Property` object to be rented. This will be updated with
  *                 rental information such as the rental status and date.
  */
-void System::rent(Property& property) {
-    auto user = getUser().getClient();
-    property.setIsRented(true);
-    user.add(property);
+void System::rent(const SharedProperty& property) {
+    const auto user = getUser().getClient();
+    property->setIsRented(true);
+    user->add(property);
     std::cout << " ~~ Alugando Propriedade ~~ " << std::endl;
     std::cout << " ~~ Insira a Data ~~ " << std::endl;
     std::cout << "Dia: ";
@@ -391,7 +381,7 @@ void System::rent(Property& property) {
     std::cout << "Ano: ";
     uint16_t year;
     std::cin >> year;
-    property.getRentedProperty().setRented(Date(day, month, year), user.getName());
+    property->getRentedProperty().setRented(Date(day, month, year), user->getName());
 }
 
 
@@ -408,24 +398,26 @@ void System::rent(Property& property) {
  *                 - "3": Update the capacity.
  *                 - "4": Update the price.
  */
-void System::update(Property& property, const std::string& option) {
+void System::update(const SharedProperty& property, const std::string& option) {
     std::string locationType;
     uint16_t capacity = 0;
     uint16_t price = 0;
     std::cout << " ~~ Atualizar Propriedade ~~ " << std::endl;
-    if (option == "2") {
+    if (option == "1") {
         std::cout << "Digite o novo tipo de localizacao (ou pressione Enter para manter o atual): ";
         std::getline(std::cin >> std::ws, locationType);
-    } else if (option == "3") {
+    } else if (option == "2") {
         std::cout << "Digite a nova capacidade (ou 0 para manter o atual): ";
         std::cin >> capacity;
-    } else if (option == "4") {
+    } else if (option == "3") {
         std::cout << "Digite o novo preco (ou 0 para manter o atual): ";
         std::cin >> price;
+    } else if (option == "4") {
+        return;
     }
 
     if (!locationType.empty() || capacity > 0 || price > 0) {
-        property.updateProperty(locationType, capacity, price);
+        property->updateProperty(locationType, capacity, price);
     } else {
         std::cout << "Nenhuma alteracao feita." << std::endl;
     }
@@ -438,14 +430,17 @@ void System::update(Property& property, const std::string& option) {
  * to the `loggedUserId`. It also provides user feedback on the status of the removal
  * and refreshes the properties list afterward.
  */
-void System::remove() {
-    auto user = getUser().getHost();
-    user.remove(loggedUserId);
+void System::remove(const std::string& id) {
+    const auto user = getUser();
+    if (this->clientType)
+        user.getClient()->remove(id);
+    else {
+        user.getHost()->remove(id);
+        this->listOfProperties.clear();
+        createPropertiesList();
+    }
     std::cout << " ~~ Removendo Propriedade ~~ " << std::endl;
     std::cout << " ~~ Propriedade removida com sucesso ~~ " << std::endl;
-    system("pause");
-    system("cls");
-    createPropertiesList();
 }
 
 /**
@@ -456,12 +451,12 @@ void System::remove() {
  * @param property The property object to be rated by the user. The property's star-rating
  *                 system is updated based on the user's input.
  */
-void System::rate(Property& property) {
+void System::rate(const SharedProperty& property) const {
     std::cout << " ~~ Avaliar Propriedade ~~ " << std::endl;
     std::cout << "Digite a nota (1-5): " << std::endl;
     uint8_t stars;
     std::cin >> stars;
-    property.getStars().addStars(loggedUserId, stars);
+    property->getStars().addStars(this->loggedUserId, stars);
 }
 
 /**
@@ -480,7 +475,7 @@ void System::rate(Property& property) {
  * - Updates the user's property list and the system's global list of properties.
  */
 void System::newProperty() {
-    auto user = getUser().getHost();
+    const auto user = getUser().getHost();
     std::cout << " ~~ Adicionar Nova Propriedade ~~ " << std::endl;
     // Gather property details from the user
     std::cout << " ~~ Digite o endereco (insira os detalhes do pais, estado, cidade) ~~ " << std::endl;
@@ -506,11 +501,11 @@ void System::newProperty() {
     std::cin >> price;
 
     // Create the new property
-    Property newProperty(propertyAddress, user.getName(), locationType, capacity, price);
-
+    auto newProperty = std::make_shared<Property>(propertyAddress, user->getName(), locationType, capacity, price);
     // Add the property to the user's list and system list
-    user.add(newProperty);
-    listOfProperties.push_back(newProperty);
+    user->add(newProperty);
+    this->listOfProperties.push_back(newProperty);
+    newProperty.reset();
 }
 
 /**
@@ -524,45 +519,41 @@ void System::newProperty() {
  *               "filters" - Display the menu for setting or removing filters, available only for clients.
  *               "manage" - Display the property management menu, available only for clients.
  */
-void System::interface(const std::string& option) {
+void System::interface(const std::string& option) const {
     if (option == "notLogged") {  // Not Logged
         std::cout << " ~~ Nao Logado ~~ " << std::endl;
         std::cout << "1. Sign In" << std::endl;
         std::cout << "2. Sign Up" << std::endl;
-        std::cout << "0. Sair" << std::endl;
+        std::cout << "Sair(s)" << std::endl;
     } else if (option == "logged") {
-        if (clientType) {
+        if (this->clientType) {
             std::cout << " ~~ Client Logado ~~ " << std::endl;
             std::cout << "1. Pesquisa" << std::endl;
             std::cout << "2. Mostra propriedades alugadas" << std::endl;
             std::cout << "3. Logout" << std::endl;
-            std::cout << "0. Sair" << std::endl;
+            std::cout << "Sair(s)" << std::endl;
         } else {
             std::cout << " ~~ Anfitriao Logado ~~ " << std::endl;
             std::cout << "1. Minhas propriedades" << std::endl;
             std::cout << "2. Mostrar propriedades alugadas" << std::endl;
             std::cout << "3. Adicionar propriedade " << std::endl;
             std::cout << "4. Logout" << std::endl;
-            std::cout << "0. Sair" << std::endl;
+            std::cout << "Sair(s)" << std::endl;
         }
     } else if (option == "filters") {
-        if (clientType) {
-            std::cout << " ~~ Filtros ~~ " << std::endl;
-            std::cout << "1. Filtrar por valor" << std::endl;
-            std::cout << "2. Filtrar por pais" << std::endl;
-            std::cout << "3. Filtrar por estado" << std::endl;
-            std::cout << "4. Filtrar por cidade" << std::endl;
-            std::cout << "5. Remover filtros" << std::endl;
-            std::cout << "6. Voltar" << std::endl;
-        }
+        std::cout << " ~~ Filtros ~~ " << std::endl;
+        std::cout << "1. Filtrar por valor" << std::endl;
+        std::cout << "2. Filtrar por pais" << std::endl;
+        std::cout << "3. Filtrar por estado" << std::endl;
+        std::cout << "4. Filtrar por cidade" << std::endl;
+        std::cout << "5. Remover filtros" << std::endl;
+        std::cout << "Voltar(v)" << std::endl;
     } else if (option == "manage") {
-        if (clientType) {
-            std::cout << " ~~ Editar ~~ " << std::endl;
-            std::cout << "1. Editar Tipo de Localizacao " << std::endl;
-            std::cout << "2. Editar Capacidade" << std::endl;
-            std::cout << "3. Editar Preco" << std::endl;
-            std::cout << "4. Voltar " << std::endl;
-        }
+        std::cout << " ~~ Editar ~~ " << std::endl;
+        std::cout << "1. Editar Tipo de Localizacao " << std::endl;
+        std::cout << "2. Editar Capacidade" << std::endl;
+        std::cout << "3. Editar Preco" << std::endl;
+        std::cout << "Voltar(v)" << std::endl;
     }
     std::cout << std::endl;
 }
@@ -578,29 +569,42 @@ void System::interface(const std::string& option) {
  *               "rate", "confirm". If none match, a general selection prompt is shown.
  * @return A string representing the user's choice from the displayed menu.
  */
-std::string System::selector(const std::string& option = "choice") {
+std::string System::selector(const std::string& option = "options") {
     if (option == "searchClient") {  // Selector with filter
         std::cout << "Filtrar(f)\tSelecionar(numero)\tVoltar(v)" << std::endl;
     } else if (option == "select") {  // Selector without filter
         std::cout << "Selecionar(numero)\tVoltar(v)" << std::endl;
     } else if (option == "selectedProperty") {  // Selected property
-        std::cout << "Alugar(1)\tVoltar(2)" << std::endl;
+        std::cout << "Alugar(a)\tVoltar(v)" << std::endl;
     } else if (option == "manageProperty") {  // Manage property
-        std::cout << "Editar(1)\tDeletar(2)\tVoltar(3)" << std::endl;
-    } else if (option == "rate") {  // Rate property choice
-        std::cout << "Avaliar(1)\tVoltar(2)" << std::endl;
+        std::cout << "Editar(e)\tDeletar(d)\tVoltar(v)" << std::endl;
+    } else if (option == "selectedRent") {  // Rate property choice
+        std::cout << "Avaliar(a)\tCancelar(c)\tVoltar(v)" << std::endl;
     } else if (option == "back") {
-        std::cout << "Voltar(1)\t" << std::endl;
+        std::cout << "Voltar(v)\t" << std::endl;
     } else if (option == "confirm") {  // Confirmation menu
-        std::cout << "Confirmar(1)\tCancelar(2)" << std::endl;
+        std::cout << "Confirmar(s)\tCancelar(n)" << std::endl;
     } else {
         std::cout << "Escolha: " << std::endl;
     }
     std::string choice;
     std::cin >> choice;
     std::cout << std::endl;
-    system("cls");
     return choice;
+}
+
+void System::addUser(const SharedHost& newHost) { this->vecOfHosts.push_back(newHost); }
+
+void System::addUser(const SharedClient& newClient) { this->vecOfClients.push_back(newClient); }
+
+void System::addProperty(const SharedHost& user, const std::string& country, const std::string& state,
+                         const std::string& city, const std::string& locationType, const uint16_t& capacity,
+                         const uint16_t& price) {
+    auto newProperty =
+        std::make_shared<Property>(Address(country, state, city), user->getName(), locationType, capacity, price);
+    user->add(newProperty);
+    this->listOfProperties.push_back(newProperty);
+    newProperty.reset();
 }
 
 /**
@@ -613,11 +617,10 @@ std::string System::selector(const std::string& option = "choice") {
  *
  * @return A newly created System instance with default configurations.
  */
-System::System() {
+System::System() : addressFilter(Address("", "", "")) {
     clientType = true;  // true for user false for host
     isLogged = false;
     loggedUserId = "";
-    addressFilter = Address("", "", "");
     priceFilter = 0;
     createPropertiesList();
 }

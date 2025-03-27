@@ -13,4 +13,6 @@ public:
     Host(const std::string &name, const std::string &password, const std::string &email);
 };
 
+using SharedHost = std::shared_ptr<Host>;
+
 #endif  // HOST_HPP

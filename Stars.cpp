@@ -21,7 +21,7 @@ void Stars::addStars(const std::string &id, const uint8_t stars) {
     calculateStars();
 }
 
-int Stars::amountOfAvaliations() const { return vecOfStars.size(); }
+size_t Stars::amountOfAvaliations() const { return this->vecOfStars.size(); }
 
 uint8_t Stars::getStars() const { return this->stars; }
 

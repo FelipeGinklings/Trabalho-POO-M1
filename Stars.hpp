@@ -6,13 +6,14 @@
 #define STARS_HPP
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct Grade {
     std::string id;
     uint8_t stars;
 
-    Grade(const std::string &id, const uint8_t stars) : id(id), stars(stars) {}
+    Grade(std::string id, const uint8_t stars) : id(std::move(id)), stars(stars) {}
 };
 
 
@@ -25,7 +26,7 @@ class Stars {
 public:
     void addStars(const std::string &id, uint8_t stars);
 
-    int amountOfAvaliations() const;
+    [[nodiscard]] size_t amountOfAvaliations() const;
 
     [[nodiscard]] uint8_t getStars() const;
 

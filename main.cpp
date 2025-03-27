@@ -3,32 +3,55 @@
 
 #include "System.hpp"
 
-auto main() -> int {
+int main() {
     int control = 1;
     std::string option;
+    auto system = System();
+
+    auto user = std::make_shared<Host>("felipeHost", "12345", "felipe@Host");
+
+    system.addUser(user);
+
+    system.addProperty(user, "Brasil", "SC", "Itajai", "Casa", 5, 300);
+    system.addProperty(user, "Brasil", "SP", "Sao Paulo", "Apartamento", 3, 200);
+    system.addProperty(user, "Brasil", "SC", "Itajai", "Apartamento", 15, 500);
+    system.addProperty(user, "Brasil", "SP", "Sao Paulo", "Casa", 25, 1000);
+    system.addProperty(user, "Argentina", "Bueno Aires", "La PLata", "Casa", 5, 150);
+    system.addProperty(user, "Argentina", "Bueno Aires", "La PLata", "Apartamento", 3, 180);
+
+    user.reset();
+
+    system.addUser(std::make_shared<Client>("felipeClient", "12345", "felipe@Client"));
+
+
     while (control != -1) {
         switch (control) {
             case 1: {
-                if (!System::getIsLogged()) {
-                    System::interface("notLogged");
-                    option = System::selector("choice");
-                    if (option == "1")
+                if (!system.getIsLogged()) {
+                    system.interface("notLogged");
+                    option = System::selector("options");
+                    if (option == "1") {
                         control = 2;
-                    else if (option == "2")
+                    } else if (option == "2") {
                         control = 3;
+                    } else {
+                        control = 0;
+                    }
                     break;
                 }
-                System::interface("logged");
-                option = System::selector("choice");
-                if (System::getClientType()) {
+                system.interface("logged");
+                option = System::selector("options");
+                if (system.getClientType()) {
                     if (option == "1")
                         control = 4;
                     else if (option == "2")
                         control = 6;
                     else if (option == "3")
                         control = 8;
-                    else
+                    else if (option == "s")
                         control = 0;
+                    else
+                        control = 1;
                     break;
                 }
                 if (option == "1")
@@ -39,51 +62,74 @@ auto main() -> int {
                     control = 7;
                 else if (option == "4")
                     control = 8;
-                else
+                else if (option == "s")
                     control = 0;
+                else
+                    control = 1;
                 break;
             }
             case 2: {
-                System::signin();
+                system.signin();
                 control = 1;
                 break;
             }
             case 3: {
-                System::signup();
+                system.signup();
                 control = 1;
                 break;
             }
-            case 4: {  // All properties from client
-                std::vector<Property> properties = System::showProperties();
+            case 4: {  // All properties
+                std::vector<SharedProperty> propertiesNR = system.showProperties();
+                if (propertiesNR.empty()) {
+                    if (system.hasFilters()) {
+                        control = 4;
+                        std::cout << "Nenhuma resultado combina com os filtros aplicados" << std::endl;
+                        system.interface("filters");
+                        option = System::selector("options");
+                        if (option == "f5") {
+                            system.searchFilter();
+                        }
+                    } else
+                        control = 9;
+                    break;
+                }
                 option = System::selector("searchClient");
                 if (option == "f") {
                     do {
-                        System::interface("filters");
-                        option = "f" + System::selector("choice");
-                        System::searchFilter(option);
-                        if (option == "f5") {
-                            System::searchFilter();
-                            break;
-                        }
-                    } while (option != "f6");
+                        propertiesNR = system.showProperties();
+                        if (propertiesNR.empty()) break;
+                        system.interface("filters");
+                        option = "f" + System::selector("options");
+                        system.searchFilter(option);
+                        if (option == "f5") system.searchFilter();
+                        propertiesNR.clear();
+                    } while (option != "fv");
                     control = 4;
+                    propertiesNR.clear();
                     break;
                 }
                 if (option == "v") {
                     control = 1;
+                    propertiesNR.clear();
                     break;
                 }
                 // Property Selected
                 const int indexC = std::stoi(option) - 1;
-                Property propertyC = properties[indexC];
-                propertyC.status();
+                auto& propertyNR = propertiesNR[indexC];
+                propertyNR->status();
                 option = System::selector("selectedProperty");
-                if (option == "1") System::rent(propertyC);
+                if (option == "a") system.rent(propertyNR);
                 control = 4;
+                propertyNR.reset();
+                propertiesNR.clear();
                 break;
             }
             case 5: {  // All properties from host
-                std::vector<Property> propertiesH = System::showProperties(true);
+                std::vector<SharedProperty> propertiesH = system.showProperties(false);
+                if (propertiesH.empty()) {
+                    control = 9;
+                    break;
+                }
                 option = System::selector("select");
                 if (option == "v") {
                     control = 1;
@@ -91,66 +137,80 @@ auto main() -> int {
                 }
                 // Property Selected
                 const int indexH = std::stoi(option) - 1;
-                Property propertyH = propertiesH[indexH];
+                auto& propertyH = propertiesH[indexH];
+                propertyH->status();
                 option = System::selector("manageProperty");
-                if (option == "2") {
-                    System::remove();
+                if (option == "d") {
+                    system.remove(propertyH->getId());
+                    control = 5;
                 }
-                control = 5;
-                if (option != "1") {
-                    control = 1;
+                if (option != "e") {
+                    propertiesH.clear();
                     break;
                 }
                 do {
-                    System::interface("manage");
-                    option = System::selector("choice");
+                    propertyH->status();
+                    system.interface("manage");
+                    option = System::selector("options");
                     System::update(propertyH, option);
-                } while (option != "4");
+                } while (option != "v");
+                propertyH.reset();
+                propertiesH.clear();
                 break;
             }
             case 6: {  // All properties rented
-                std::vector<Property> propertiesRent = System::showProperties("rented");
-                if (System::getClientType())
+                std::vector<SharedProperty> propertiesR = system.showProperties("rented");
+                if (propertiesR.empty()) {
+                    control = 9;
+                    break;
+                }
+                if (system.getClientType())
                     option = System::selector("select");
                 else {
                     option = System::selector("back");
-                    if (option == "1") {
-                        control = 1;
-                        break;
-                    }
+                    option = "v";
                 }
 
-                if (option == "2") {
+                if (option == "v") {
                     control = 1;
+                    propertiesR.clear();
                     break;
                 }
 
                 // Property Selected
                 const int indexR = std::stoi(option) - 1;
-                Property propertyR = propertiesRent[indexR];
-                propertyR.status();
-                option = System::selector("rate");
-                if (option == "1") {
-                    System::rate(propertyR);
-                    control = 1;
-                } else
-                    control = 6;
+                auto& propertyR = propertiesR[indexR];
+                propertyR->status();
+                option = System::selector("selectedRent");
+                if (option == "a") {
+                    system.rate(propertyR);
+                } else if (option == "c")
+                    system.remove(propertyR->getId());
+                control = 6;
+                propertyR.reset();
+                propertiesR.clear();
                 break;
             }
             case 7: {
-                System::newProperty();
+                system.newProperty();
                 control = 1;
                 break;
             }
             case 8: {
-                System::logout();
+                system.logout();
+                control = 1;
+                break;
+            }
+            case 9: {
+                std::cout << "Nao ha propriedades cadastradas" << std::endl;
+                option = System::selector("back");
                 control = 1;
                 break;
             }
             default: {
-                std::cout << "Você tem certeza que quer sair?" << std::endl;
+                std::cout << "Voce tem certeza que quer sair?" << std::endl;
                 option = System::selector("confirm");
-                if (option == "2") {
+                if (option != "s") {
                     control = 1;
                     break;
                 }

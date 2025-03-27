@@ -4,8 +4,8 @@
 
 #include "Address.hpp"
 
-#include <string>
 #include <iostream>
+#include <string>
 
 std::string Address::getCountry() { return this->country; }
 
@@ -28,4 +28,9 @@ Address::Address(const std::string& country, const std::string& state, const std
 std::ostream& operator<<(std::ostream& os, const Address& address) {
     os << "Country: " << address.country << " - State: " << address.state << " - City: " << address.city;
     return os;
+}
+
+bool operator==(Address addressA, Address addressB) {
+    return addressA.getCountry() == addressB.getCountry() && addressA.getState() == addressB.getState() &&
+           addressA.getCity() == addressB.getCity();
 }

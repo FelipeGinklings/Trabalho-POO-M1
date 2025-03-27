@@ -10,21 +10,21 @@
 
 class UserExist {
     bool itExist;
-    Client client;
-    Host host;
+    SharedClient client;
+    SharedHost host;
 
 public:
     [[nodiscard]] bool getItExist() const;
 
     void setItExist(bool itExist);
 
-    Client getClient();
+    [[nodiscard]] SharedClient getClient() const;
 
-    void setClient(const Client& client);
+    void setClient(const SharedClient& client);
 
-    Host getHost();
+    [[nodiscard]] SharedHost getHost() const;
 
-    void setHost(const Host& host);
+    void setHost(const SharedHost& host);
 
     UserExist();
 };

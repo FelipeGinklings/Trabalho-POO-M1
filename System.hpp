@@ -10,60 +10,66 @@
 
 
 class System {
-    static std::vector<Client> vecOfClients;
-    static std::vector<Host> vecOfHosts;
-    static std::vector<Property> listOfProperties;
-    static bool clientType;  // true for user false for host
-    static bool isLogged;
-    static std::string loggedUserId;
-    static Address addressFilter;
-    static uint16_t priceFilter;
+    std::vector<SharedClient> vecOfClients;
+    std::vector<SharedHost> vecOfHosts;
+    std::vector<SharedProperty> listOfProperties;
+    bool clientType;  // true for user false for host
+    bool isLogged;
+    std::string loggedUserId;
+    Address addressFilter;
+    uint16_t priceFilter;
 
 
-    static UserExist getUser();
+    UserExist getUser();
 
-    static UserExist getUser(const std::string &email, const std::string &password);
+    UserExist getUser(const std::string &email, const std::string &password);
 
-    static void createPropertiesList();
+    void createPropertiesList();
 
 public:
-    [[nodiscard]] static Address getAddressFilter();
+    [[nodiscard]] bool hasFilters() const;
 
-    [[nodiscard]] static uint16_t getPriceFilter();
+    [[nodiscard]] bool getClientType() const;
 
-    [[nodiscard]] static bool getClientType();
+    [[nodiscard]] bool getIsLogged() const;
 
-    [[nodiscard]] static bool getIsLogged();
+    std::vector<SharedProperty> showProperties();
 
-    static std::vector<Property> showProperties();
+    std::vector<SharedProperty> showProperties(const std::string &rented);
 
-    static std::vector<Property> showProperties(const std::string &rented);
+    std::vector<SharedProperty> showProperties(bool hostProperties);
 
-    static std::vector<Property> showProperties(bool hostProperties);
+    bool signin();
 
-    static bool signin();
+    void signup();
 
-    static void signup();
+    void logout();
 
-    static void logout();
+    void searchFilter(const std::string &filterChoice);
 
-    static void searchFilter(const std::string &filterChoice);
+    void searchFilter();
 
-    static void searchFilter();
+    void rent(const SharedProperty &property);
 
-    static void rent(Property &property);
+    static void update(const SharedProperty &property, const std::string &option);
 
-    static void update(Property &property, const std::string &option);
+    void remove(const std::string &id);
 
-    static void remove();
+    void rate(const SharedProperty &property) const;
 
-    static void rate(Property &property);
+    void newProperty();
 
-    static void newProperty();
-
-    static void interface(const std::string &option);
+    void interface(const std::string &option) const;
 
     [[nodiscard]] static std::string selector(const std::string &option);
+
+    void addUser(const SharedHost &newHost);
+
+    void addUser(const SharedClient &newClient);
+
+    void addProperty(const SharedHost &user, const std::string &country, const std::string &state,
+                     const std::string &city, const std::string &locationType, const uint16_t &capacity,
+                     const uint16_t &price);
 
     System();
 };

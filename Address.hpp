@@ -27,13 +27,10 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Address& address);
 
+    friend bool operator==(Address addressA, Address addressB);
+
     Address(const std::string& country, const std::string& state, const std::string& city);
 };
-
-inline bool operator==(Address addressA, Address addressB) {
-    return addressA.getCountry() == addressB.getCountry() && addressA.getState() == addressB.getState() &&
-           addressA.getCity() == addressB.getCity();
-}
 
 
 #endif  // ADDRESS_HPP
