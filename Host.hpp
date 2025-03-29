@@ -9,7 +9,7 @@
 
 class Host : public User {
 public:
-    void update(const std::string &id, const std::string &locationType, uint16_t capacity, uint16_t price);
+    void update(const std::string &id, const std::string &locationType, int capacity, int price);
     Host(const std::string &name, const std::string &password, const std::string &email);
 };
 

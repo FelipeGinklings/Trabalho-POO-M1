@@ -4,8 +4,8 @@
 
 #include "Host.hpp"
 
-void Host::update(const std::string &id, const std::string &locationType, const uint16_t capacity,
-                  const uint16_t price) {
+void Host::update(const std::string &id, const std::string &locationType, const int capacity,
+                  const int price) {
     for (const auto &property: this->vecOfProperties) {
         if (property->getId() == id) {
             property->updateProperty(locationType, capacity, price);

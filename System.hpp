@@ -17,7 +17,7 @@ class System {
     bool isLogged;
     std::string loggedUserId;
     Address addressFilter;
-    uint16_t priceFilter;
+    int priceFilter;
 
 
     UserExist getUser();
@@ -36,8 +36,6 @@ public:
     std::vector<SharedProperty> showProperties();
 
     std::vector<SharedProperty> showProperties(const std::string &rented);
-
-    std::vector<SharedProperty> showProperties(bool hostProperties);
 
     bool signin();
 
@@ -68,8 +66,8 @@ public:
     void addUser(const SharedClient &newClient);
 
     void addProperty(const SharedHost &user, const std::string &country, const std::string &state,
-                     const std::string &city, const std::string &locationType, const uint16_t &capacity,
-                     const uint16_t &price);
+                     const std::string &city, const std::string &locationType, const int &capacity,
+                     const int &price);
 
     System();
 };

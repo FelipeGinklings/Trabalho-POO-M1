@@ -4,7 +4,6 @@
 
 #ifndef PROPERTY_HPP
 #define PROPERTY_HPP
-#include <cstdint>
 #include <string>
 
 #include "Address.hpp"
@@ -17,35 +16,34 @@ class Property {
     std::string ownerName;
     Address address;
     std::string locationType;
-    uint16_t capacity;
-    uint16_t price;
-    Stars stars;
+    int capacity;
+    int price;
+    Stars *stars;
     bool isRented;
-    RentedProperty rentedProperty;
+    RentedProperty *rentedProperty;
 
 public:
     [[nodiscard]] std::string getId() const;
 
     [[nodiscard]] std::string getOwnerName() const;
 
-    [[nodiscard]] uint16_t getPrice() const;
+    [[nodiscard]] int getPrice() const;
 
     [[nodiscard]] bool getIsRented() const;
 
     void setIsRented(bool isRentedP);
 
-    Stars getStars();
+    [[nodiscard]] Stars *getStars() const;
 
     Address &getAddress();
 
-    RentedProperty getRentedProperty();
+    [[nodiscard]] RentedProperty *getRentedProperty() const;
 
     void status() const;
 
-    void updateProperty(const std::string &locationType, uint16_t capacity, uint16_t price);
+    void updateProperty(const std::string &locationType, int capacity, int price);
 
-    Property(Address address, const std::string &ownerName, const std::string &locationType, uint16_t capacity,
-             uint16_t price);
+    Property(Address address, const std::string &ownerName, const std::string &locationType, int capacity, int price);
 };
 
 inline bool operator<(const Property &propA, const Property &propB) { return propA.getId() < propB.getId(); }

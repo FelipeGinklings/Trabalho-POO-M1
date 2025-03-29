@@ -6,11 +6,9 @@
 
 #include <iostream>
 
-void Date::print() const {
-    std::cout << static_cast<int>(day) << "/" << static_cast<int>(month) << "/" << static_cast<int>(year) << std::endl;
-}
+void Date::print() const { std::cout << this->day << "/" << this->month << "/" << this->year << std::endl; }
 
-Date::Date(const uint16_t day, const uint8_t month, const uint16_t year) {
+Date::Date(const int day, const int month, const int year) {
     this->day = day;
     this->month = month;
     this->year = year;

@@ -5,11 +5,13 @@
 #include "Stars.hpp"
 
 void Stars::calculateStars() {
-    for (const auto &grade: this->vecOfStars) this->stars += grade.stars;
-    this->stars /= this->vecOfStars.size();
+    int stars = 0;
+    for (const auto &grade: this->vecOfStars) stars += grade.stars;
+    stars /= this->vecOfStars.size();
+    this->stars = stars;
 }
 
-void Stars::addStars(const std::string &id, const uint8_t stars) {
+void Stars::addStars(const std::string &id, const int stars) {
     for (auto &grade: this->vecOfStars) {
         if (grade.id == id) {
             grade.stars = stars;
@@ -17,12 +19,12 @@ void Stars::addStars(const std::string &id, const uint8_t stars) {
             return;
         }
     }
-    this->vecOfStars.push_back(Grade(id, stars));
+    this->vecOfStars.emplace_back(id, stars);
     calculateStars();
 }
 
 size_t Stars::amountOfAvaliations() const { return this->vecOfStars.size(); }
 
-uint8_t Stars::getStars() const { return this->stars; }
+int Stars::getStars() const { return this->stars; }
 
 Stars::Stars() { this->stars = 0; }

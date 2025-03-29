@@ -4,18 +4,17 @@
 
 #ifndef DATE_HPP
 #define DATE_HPP
-#include <cstdint>
 
 
 class Date {
-    uint8_t day;
-    uint8_t month;
-    uint16_t year;
+    int day;
+    int month;
+    int year;
 
 public:
     void print() const;
 
-    Date(uint16_t day, uint8_t month, uint16_t year);
+    Date(int day, int month, int year);
 
     Date();
 };

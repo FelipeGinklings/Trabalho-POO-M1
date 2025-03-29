@@ -20,14 +20,14 @@ protected:
     std::string password;
     std::vector<SharedProperty> vecOfProperties;
 
-public:
     [[nodiscard]] std::string getId() const;
-
-    [[nodiscard]] std::string getName() const;
 
     [[nodiscard]] std::string getEmail() const;
 
     [[nodiscard]] std::string getPassword() const;
+
+public:
+    [[nodiscard]] std::string getName() const;
 
     [[nodiscard]] std::vector<SharedProperty> getProperties() const;
 
@@ -38,6 +38,8 @@ public:
     void remove(const std::string &idP);
 
     User(const std::string &name, const std::string &password, const std::string &email);
+
+    friend class System;
 };
 
 

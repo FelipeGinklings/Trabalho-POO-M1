@@ -16,10 +16,10 @@ class RentedProperty {
 
 public:
     void clientStatus() const;
+
     void setRented(Date date, const std::string &clientName);
 
     void hostStatus() const;
-    ;
 
     RentedProperty(Date date, const std::string &hostName, const std::string &clientName);
 

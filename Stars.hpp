@@ -4,31 +4,30 @@
 
 #ifndef STARS_HPP
 #define STARS_HPP
-#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
 struct Grade {
     std::string id;
-    uint8_t stars;
+    int stars;
 
-    Grade(std::string id, const uint8_t stars) : id(std::move(id)), stars(stars) {}
+    Grade(std::string id, const int stars) : id(std::move(id)), stars(stars) {}
 };
 
 
 class Stars {
     std::vector<Grade> vecOfStars;
-    uint8_t stars;
+    int stars;
 
     void calculateStars();
 
 public:
-    void addStars(const std::string &id, uint8_t stars);
+    void addStars(const std::string &id, int stars);
 
     [[nodiscard]] size_t amountOfAvaliations() const;
 
-    [[nodiscard]] uint8_t getStars() const;
+    [[nodiscard]] int getStars() const;
 
     Stars();
 };

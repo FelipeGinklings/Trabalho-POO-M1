@@ -10,15 +10,13 @@
 void RentedProperty::hostStatus() const {
     std::cout << "Date: ";
     this->date.print();
-    std::cout << "Host: " << std::endl;
-    this->hostName;
+    std::cout << "Host: " << this->hostName << std::endl;
 }
 
 void RentedProperty::clientStatus() const {
     std::cout << "Date: ";
     this->date.print();
-    std::cout << "Client: " << std::endl;
-    this->hostName;
+    std::cout << "Client: " << this->clientName << std::endl;
 }
 
 void RentedProperty::setRented(const Date date, const std::string &clientName) {

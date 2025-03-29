@@ -22,4 +22,4 @@ void UserExist::setHost(const SharedHost& host) {
     this->host = host;
 }
 
-UserExist::UserExist() : client(new Client("", "", "")), host(new Host("", "", "")) { this->itExist = false; }
+UserExist::UserExist() : client(nullptr), host(nullptr) { this->itExist = false; }

@@ -8,20 +8,17 @@ int main() {
     std::string option;
     auto system = System();
 
-    auto user = std::make_shared<Host>("felipeHost", "12345", "felipe@Host");
-
+    // Para testes
+    auto user = std::make_shared<Host>("userHost", "0", "user@Host");
     system.addUser(user);
-
     system.addProperty(user, "Brasil", "SC", "Itajai", "Casa", 5, 300);
     system.addProperty(user, "Brasil", "SP", "Sao Paulo", "Apartamento", 3, 200);
     system.addProperty(user, "Brasil", "SC", "Itajai", "Apartamento", 15, 500);
     system.addProperty(user, "Brasil", "SP", "Sao Paulo", "Casa", 25, 1000);
     system.addProperty(user, "Argentina", "Bueno Aires", "La PLata", "Casa", 5, 150);
     system.addProperty(user, "Argentina", "Bueno Aires", "La PLata", "Apartamento", 3, 180);
-
     user.reset();
-
-    system.addUser(std::make_shared<Client>("felipeClient", "12345", "felipe@Client"));
+    system.addUser(std::make_shared<Client>("userClient", "0", "user@Client"));
 
 
     while (control != -1) {
@@ -125,7 +122,7 @@ int main() {
                 break;
             }
             case 5: {  // All properties from host
-                std::vector<SharedProperty> propertiesH = system.showProperties(false);
+                std::vector<SharedProperty> propertiesH = system.showProperties("allHost");
                 if (propertiesH.empty()) {
                     control = 9;
                     break;
@@ -141,6 +138,8 @@ int main() {
                 propertyH->status();
                 option = System::selector("manageProperty");
                 if (option == "d") {
+                    delete propertyH->getRentedProperty();
+                    delete propertyH->getStars();
                     system.remove(propertyH->getId());
                     control = 5;
                 }
@@ -167,6 +166,7 @@ int main() {
                 if (system.getClientType())
                     option = System::selector("select");
                 else {
+                    // ReSharper disable once CppDFAUnusedValue
                     option = System::selector("back");
                     option = "v";
                 }
@@ -184,8 +184,10 @@ int main() {
                 option = System::selector("selectedRent");
                 if (option == "a") {
                     system.rate(propertyR);
-                } else if (option == "c")
+                } else if (option == "c") {
                     system.remove(propertyR->getId());
+                    propertyR->setIsRented(false);
+                }
                 control = 6;
                 propertyR.reset();
                 propertiesR.clear();
@@ -203,6 +205,7 @@ int main() {
             }
             case 9: {
                 std::cout << "Nao ha propriedades cadastradas" << std::endl;
+                // ReSharper disable once CppDFAUnusedValue
                 option = System::selector("back");
                 control = 1;
                 break;

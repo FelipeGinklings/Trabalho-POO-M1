@@ -4,10 +4,11 @@
 
 #include "Client.hpp"
 
-void Client::rate(const std::string &id, const uint8_t rate) const {
+void Client::rate(const std::string &id, const int rate) const {
     for (const auto &property: this->vecOfProperties) {
         if (property->getId() == id) {
-            property->getStars().addStars(id, rate);
+            property->getStars()->addStars(id, rate);
+            return;
         }
     }
 }

@@ -26,7 +26,7 @@ Address::Address(const std::string& country, const std::string& state, const std
 }
 
 std::ostream& operator<<(std::ostream& os, const Address& address) {
-    os << "Country: " << address.country << " - State: " << address.state << " - City: " << address.city;
+    os << "Pais: " << address.country << "\nEstado: " << address.state << "\nCidade: " << address.city << std::endl;
     return os;
 }
 
